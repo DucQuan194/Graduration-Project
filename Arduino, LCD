@@ -3,12 +3,14 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x27,16,2);
+
 // Khai báo các đối tượng servo 
 int sensor = 8; 
 Servo baseServo;
 Servo shoulderServo;
 Servo elbowServo;
 Servo gripperServo;
+
 // Khai báo các góc ban đầu
 int baseAngle = 42;
 int shoulderAngle = 0;
@@ -18,6 +20,7 @@ int dem_do =0, dem_vang=0, dem_xanh=0;
 void setup() {
  pinMode(sensor,INPUT);
  Serial.begin(9600);
+
  // Gắn các servo vào các chân tương ứng
  baseServo.attach(5);
  shoulderServo.attach(6);
@@ -31,6 +34,7 @@ void setup() {
  lcd.print("YELLOW:");
  lcd.setCursor(0,1);
  lcd.print("BLUE:"); 
+
  // Đặt các servo về vị trí ban đầu
  baseServo.write(baseAngle);
  shoulderServo.write(shoulderAngle);
@@ -46,6 +50,7 @@ void vitri_bandau()
 }
 void mau_do()
 {
+
  // Di chuyển cánh tay robot đến vị trí gắp vật
  moveArm(42, 0, 0, 25); 
  delay(1000); 
@@ -64,6 +69,7 @@ void mau_do()
 }
 void mau_vang()
 {
+
  // Di chuyển cánh tay robot đến vị trí gắp vật
  moveArm(42, 0, 0, 25); 
  delay(1000); 
@@ -82,6 +88,7 @@ delay(1000);
 }
 void mau_xanh()
 {
+
  // Di chuyển cánh tay robot đến vị trí gắp vật
  moveArm(42, 0, 0, 25); 
  delay(1000); 
@@ -97,6 +104,7 @@ void mau_xanh()
  gripperServo.write(25); 
  delay(1000); 
 }
+
 void kocoRYG()
 {
 moveArm(42, 0, 0, 25);
@@ -147,6 +155,7 @@ ct1();
  lcd.print(round(dem_xanh));
  }
  }}
+
 // Hàm di chuyển cánh tay robot đến vị trí mong muốn
 void moveArm(int base, int shoulder, int elbow, int gripper) {
  baseServo.write(base);
