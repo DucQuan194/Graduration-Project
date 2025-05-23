@@ -1,0 +1,129 @@
+import numpy as np
+import argparse
+import cv2
+import RPi.GPIO as GPIO
+import time
+import serial
+
+cap = cv2.VideoCapture(0)  // khai bao cau hinh camera
+#cap.set(3,640)
+#cap.set(4,480)
+
+# _, frame = cap.read()
+# hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+ser = serial.Serial(  //setting dia chi giao thuc truyen thong uart
+    port ='/dev/ttyAMA0',
+    baudrate = 9600,
+    parity = serial.PARITY_NONE,
+    stopbits = serial.STOPBITS_ONE,
+    bytesize = serial.EIGHTBITS,
+    timeout = 1
+)
+
+while True:
+    ret, frame = cap.read()
+    hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    
+    
+    s = ser.readline()
+    data = s.decode()
+    data = data.rstrip()
+    print(data)
+    
+    # Red color
+    low_red = np.array([0, 160, 160], np.uint8)
+    high_red = np.array([9, 255, 255],np.uint8)
+    red_mask = cv2.inRange(hsv_frame, low_red, high_red)
+    
+    # Yellow color
+    low_yellow = np.array([20, 140, 140],np.uint8)
+    high_yellow = np.array([35, 255, 255],np.uint8)
+    yellow_mask = cv2.inRange(hsv_frame, low_yellow, high_yellow)
+
+    # Blue color
+    low_blue = np.array([100, 140, 80],np.uint8)
+    high_blue = np.array([128, 255, 255],np.uint8)
+    blue_mask = cv2.inRange(hsv_frame, low_blue, high_blue)
+
+    # Every color except white
+    low_white = np.array([50, 60, 60])
+    high_white = np.array([80, 255, 255])
+    white_mask = cv2.inRange(hsv_frame, low_white, high_white)
+    
+    kernal = np.ones((5, 5), "uint8")
+    
+    # For red color
+    red_mask = cv2.dilate(red_mask, kernal)
+    red = cv2.bitwise_and(frame, frame, mask=red_mask)
+
+    yellow_mask = cv2.dilate(yellow_mask, kernal)
+    yellow = cv2.bitwise_and(frame, frame, mask=yellow_mask)
+    
+    blue_mask = cv2.dilate(blue_mask, kernal)
+    blue = cv2.bitwise_and(frame, frame, mask=blue_mask)
+    
+    white_mask =cv2.dilate(white_mask, kernal)
+    white = cv2.bitwise_and(frame, frame, mask=white_mask)
+    # Creating contour to track red color
+    contours, hierarchy = cv2.findContours(red_mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if (area > 300):
+            x, y, w, h = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(frame, (x, y),(x + w, y + h),(0, 0, 255), 2)                                                                          
+            cv2.putText(frame, "Red Colour", (x, y),cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0, 0, 255))
+              
+    # Creating contour to track yellow color
+    contours, hierarchy = cv2.findContours(yellow_mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if (area > 300):
+            x, y, w, h = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(frame, (x, y),(x + w, y + h),(0, 255, 255), 2)                                                                          
+            cv2.putText(frame, "Yellow Colour", (x, y),cv2.FONT_HERSHEY_SIMPLEX, 1.0,(0, 255, 0))
+    
+    # Creating contour to track green color
+    contours, hierarchy = cv2.findContours(blue_mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if (area > 300):
+            x, y, w, h = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(frame, (x, y),(x + w, y + h),(0, 255, 0), 2)                                                                          
+            cv2.putText(frame, "Blue Colour", (x, y),cv2.FONT_HERSHEY_SIMPLEX, 0.7,(255, 0, 0))
+
+      cv2.imshow("Frame", frame)
+#     cv2.imshow("Red", red)
+#     cv2.imshow("Blue", blue)
+#     cv2.imshow("Green", green)
+#     cv2.imshow("Result", result)
+
+    if np.any(red):
+        print("r");
+        cv2.imshow("do",red); #red
+        ser.write(b'do')
+        ser.flush()
+        time.sleep(0.5)
+    elif np.any(yellow):
+        print("y");
+        cv2.imshow("vang",yellow); #yellow
+        ser.write(b'vang')
+        ser.flush()
+        time.sleep(0.5)
+    elif np.any(blue):
+        print("b");
+        cv2.imshow("xanh",blue); #blue
+        ser.write(b'xanh')
+        ser.flush()
+        time.sleep(0.5)
+    elif np.any(white): #ko phai red, yellow, green
+    #    else:
+        print("ko co RYG");
+        cv2.imshow("Result", result);
+        ser.write(b'ko co RYB')
+        ser.flush()
+       time.sleep(3)
+    key = cv2.waitKey(1)
+    if key == 27:
+        break
+
