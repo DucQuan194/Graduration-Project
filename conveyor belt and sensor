@@ -1,0 +1,32 @@
+int irSensor = 8;    // Cảm biến hồng ngoại
+int in1 = 3;
+int in2 = 4;
+int ena = 11;
+
+void setup() {
+  pinMode(irSensor, INPUT);
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(ena, OUTPUT);
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  int sensorValue = digitalRead(irSensor);
+  Serial.println(sensorValue);
+
+  if (sensorValue == LOW) { // Có vật (tuỳ cảm biến đảo logic hoặc không)
+    // Dừng motor
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    // analogWrite(ena, 0);
+  } else {
+    // Chạy motor
+    digitalWrite(in1, HIGH);
+    digitalWrite(in2, LOW);
+    analogWrite(ena, 205); // tốc độ 0–255
+  }
+
+  delay(100);
+}
