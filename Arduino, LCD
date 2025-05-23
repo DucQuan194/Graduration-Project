@@ -1,0 +1,157 @@
+#include <Servo.h>
+#include "string.h"
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,16,2);
+// Khai báo các đối tượng servo 
+int sensor = 8; 
+Servo baseServo;
+Servo shoulderServo;
+Servo elbowServo;
+Servo gripperServo;
+// Khai báo các góc ban đầu
+int baseAngle = 42;
+int shoulderAngle = 0;
+int elbowAngle = 0;
+int gripperAngle = 25;
+int dem_do =0, dem_vang=0, dem_xanh=0;
+void setup() {
+ pinMode(sensor,INPUT);
+ Serial.begin(9600);
+ // Gắn các servo vào các chân tương ứng
+ baseServo.attach(5);
+ shoulderServo.attach(6);
+ elbowServo.attach(9);
+ gripperServo.attach(11);
+ lcd.begin(); // Khởi tạo màn hình LCD
+ lcd.backlight(); // Bật đèn nền LCD
+ lcd.setCursor(0,0);
+ lcd.print("RED:");
+ lcd.setCursor(7,0);
+ lcd.print("YELLOW:");
+ lcd.setCursor(0,1);
+ lcd.print("BLUE:"); 
+ // Đặt các servo về vị trí ban đầu
+ baseServo.write(baseAngle);
+ shoulderServo.write(shoulderAngle);
+ elbowServo.write(elbowAngle);
+ gripperServo.write(gripperAngle);
+}
+void vitri_bandau()
+{
+ baseServo.write(baseAngle);
+ shoulderServo.write(shoulderAngle);
+ elbowServo.write(elbowAngle);
+ gripperServo.write(gripperAngle);
+}
+void mau_do()
+{
+ // Di chuyển cánh tay robot đến vị trí gắp vật
+ moveArm(42, 0, 0, 25); 
+ delay(1000); 
+ moveArm(42, 15, 16, 25); 
+ // Gắp vật
+ gripperServo.write(75); 
+ delay(1000); 
+ // Di chuyển cánh tay robot về vị trí kho
+ moveArm(150, 15, 16, 75);
+ delay(1000);
+ moveArm(150, 35,0, 75);
+ delay(1000); 
+ // nhả vật
+ gripperServo.write(25); 
+ delay(1000);
+}
+void mau_vang()
+{
+ // Di chuyển cánh tay robot đến vị trí gắp vật
+ moveArm(42, 0, 0, 25); 
+ delay(1000); 
+ moveArm(42, 15, 16, 25); 
+ // Gắp vật
+ gripperServo.write(75);
+ delay(1000); 
+ // Di chuyển cánh tay robot về vị trí kho
+ moveArm(132, 15, 16, 75);
+ delay(1000); 
+ moveArm(132, 35, 0, 75);
+ delay(1000); 
+ // nhả vật
+ gripperServo.write(25);
+delay(1000); 
+}
+void mau_xanh()
+{
+ // Di chuyển cánh tay robot đến vị trí gắp vật
+ moveArm(42, 0, 0, 25); 
+ delay(1000); 
+ moveArm(42, 15, 16, 25); 
+ // Gắp vật
+ gripperServo.write(75); 
+ delay(1000); 
+ moveArm(115, 15, 16, 75);
+ delay(1000); 
+ moveArm(115, 35, 0, 75);
+ delay(1000); 
+ // nhả vật
+ gripperServo.write(25); 
+ delay(1000); 
+}
+void kocoRYG()
+{
+moveArm(42, 0, 0, 25);
+delay(1000);
+}
+void ct1()
+{
+ mau_do();
+ vitri_bandau();
+}
+void ct2()
+{
+ mau_vang();
+ vitri_bandau();
+}
+void ct3()
+{ 
+ mau_xanh();
+ vitri_bandau();
+}
+void loop() {
+ if(Serial.available()>0)
+ {
+ String str = Serial.readString();
+ Serial.println(str);
+ if(str == String("do"))
+ {
+ Serial.println("nhan sp do");
+ct1();
+ dem_do = dem_do +1;
+ lcd.setCursor(4,0);
+ lcd.print(round(dem_do));
+ }
+ else if(str == String("vang"))
+ {
+ Serial.println("nhan sp vang"); 
+ ct2();
+ dem_vang = dem_vang +1;
+ lcd.setCursor(14,0);
+ lcd.print(round(dem_vang));
+ }
+ else if(str == String("xanh"))
+ {
+ Serial.println("nhan sp xanh"); 
+ ct3();
+ dem_xanh = dem_xanh +1;
+ lcd.setCursor(7,1);
+ lcd.print(round(dem_xanh));
+ }
+ }}
+// Hàm di chuyển cánh tay robot đến vị trí mong muốn
+void moveArm(int base, int shoulder, int elbow, int gripper) {
+ baseServo.write(base);
+ shoulderServo.write(shoulder);
+ elbowServo.write(elbow);
+ gripperServo.write(gripper);
+ delay(500); // Đợi 0.5 giây để servo di chuyển đến vị trí mới
+}
